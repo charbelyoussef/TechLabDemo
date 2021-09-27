@@ -14,46 +14,99 @@ class ReceipeDetailsVC: UIViewController {
 
 
     @IBOutlet weak var lblTitle: UILabel!
+    @IBOutlet weak var ivHeaderImage: UIImageView!
     @IBOutlet weak var cstrVAdHeight: NSLayoutConstraint!
     @IBOutlet weak var vBanner: GADBannerView!
     @IBOutlet weak var btnRemoveAds: UIButton!
+    
+    @IBOutlet weak var lblIngredientsContent: UILabel!
+    @IBOutlet weak var lblDirectionsContent: UILabel!
+    
+    @IBOutlet weak var constVHeaderHeight: NSLayoutConstraint!
+    @IBOutlet weak var svContainer: UIScrollView! {
+        didSet {
+            svContainer.contentInset = UIEdgeInsets(top: headerMaxHeight, left: 0, bottom: 0, right: 0)
+            svContainer.scrollIndicatorInsets = UIEdgeInsets(top: headerMaxHeight, left: 0, bottom: 0, right: 0)
+        }
+    }
     
     private var interstitial: GADInterstitialAd?
 
     //MARK: Class Variables
     var selectedReceipe:Structs.Receipe?
-        
+    var headerMaxHeight:CGFloat = 250
+    var headerMinHeight:CGFloat = 75
+
     //MARK: Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+//        self.svContainer.delegate = self
+
         vBanner.delegate = self
         
         loadBannerAd()
         loadInterstitialAd()
 
         initViews()
+        
+        self.svContainer.setNeedsLayout()
+
     }
     
     override func viewWillAppear(_ animated: Bool) {
         refreshBannerView(adsActivated: UserDefaults.standard.bool(forKey: "AdsActivated"))
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        if UserDefaults.standard.bool(forKey: "AdsActivated") {
-            if interstitial != nil {
-                interstitial?.present(fromRootViewController: self)
-            } else {
-                print("Ad wasn't ready")
-            }
-        }
-    }
-    
     //MARK: Class Methods
     func initViews() {
         lblTitle.text = selectedReceipe?.name
-//        cstrVAdHeight.constant = 0
+        
+        ivHeaderImage.sd_setImage(with: URL(string: selectedReceipe?.imageurl?.safeURL() ?? "N/A"), completed: nil)
+        
+        var ingredientsStr = ""
+        if let ingredients = selectedReceipe?.ingredients, ingredients.count > 0 {
+            for ingredient in ingredients {
+                ingredientsStr.append("-\(ingredient) \n")
+            }
+            lblIngredientsContent.text = ingredientsStr
+        }
+        
+        var stepsStr = ""
+        if let steps = selectedReceipe?.steps, steps.count > 0 {
+            for (index, element) in steps.enumerated() {
+                stepsStr.append("Step \(index) \n")
+                stepsStr.append("\(element) \n\n")
+            }
+            lblDirectionsContent.text = stepsStr
+        }
+
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        switch scrollView {
+        case svContainer:
+            constVHeaderHeight.constant = scrollView.contentOffset.y < 0 ? max(abs(scrollView.contentOffset.y), headerMinHeight) : headerMinHeight
+//            cvHeaderImages.collectionViewLayout.invalidateLayout()
+            break
+//        case cvHeaderImages:
+//
+//            let visibleRect = CGRect(origin: cvHeaderImages.contentOffset, size: cvHeaderImages.bounds.size)
+//            let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
+//            let visibleIndexPath = cvHeaderImages.indexPathForItem(at: visiblePoint)
+//            if let index = visibleIndexPath?.row {
+//                currentPCIndex = index
+//            }
+//
+//            pcCityAttractionsImages.currentPage = currentPCIndex
+//
+//            break
+            
+        default:
+            break
+        }
+        
     }
     
     //MARK: Buttons Actions
