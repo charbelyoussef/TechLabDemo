@@ -1,0 +1,6 @@
+framework module Pods_TechLabDemo {
+  umbrella header "Pods-TechLabDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}
